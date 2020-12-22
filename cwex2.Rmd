@@ -1,0 +1,97 @@
+---
+title: "exercise2"
+author: "Ana"
+date: "11/01/2020"
+output: html_document
+---
+2. Decision Trees and Random Forests
+To predict room occupancy using the decision tree classification algorithm.
+(a) Load the room occupancy data and train a decision tree classifier. Evaluate the predictive performance
+by reporting the accuracy obtained on the testing dataset.
+```{r , echo=FALSE}
+RoomOccupancy_Testing <- read.csv("~/Desktop/computer_science/BIG DATA/Bsc_CW2_13028355_a_navarro/RoomOccupancy_Testing.txt")
+RoomOccupancy_Training <- read.csv("~/Desktop/computer_science/BIG DATA/Bsc_CW2_13028355_a_navarro/RoomOccupancy_Training.txt")
+train <- RoomOccupancy_Training
+test<- RoomOccupancy_Testing
+library(ISLR)
+library(tree)
+tree.occupancy <- tree(Occupancy~., train)
+summary(tree.occupancy)
+
+
+```
+
+Error rate is 1%. Evaluate test error to know the accuracy obtained, and then prun it to improve accuracy:
+
+```{r , echo=TRUE}
+
+tree.occupancy.predicted <- predict(tree.occupancy, test, type = 'class')
+library(caret)
+confusionMatrix(tree.occupancy.predicted, test$Occupancy)
+
+
+
+```
+
+
+accuracy = 0.7967, which is relatively high.
+
+
+(b) Output and analyse the tree learned by the decision tree algorithm, i.e. plot the tree structure and
+make a discussion about it.
+
+```{r , echo=TRUE}
+plot(tree.occupancy)
+text(tree.occupancy, pretty = 0)
+```
+
+#discussion here
+
+(c) Train a random forests classifier, and evaluate the predictive performance by reporting the accuracy
+obtained on the testing dataset.
+
+```{r , echo=TRUE}
+
+library(randomForest)
+rf <- randomForest(Occupancy~., data=RoomOccupancy_Training)
+print(rf)
+```
+ntree = 500
+mtry = 2
+
+```{r , echo=TRUE}
+library(caret)
+pred.train <- predict(rf, RoomOccupancy_Training)
+head(RoomOccupancy_Training$Occupancy)
+```
+Predction seems accurate.
+
+```{r , echo=TRUE}
+pred.test <- predict(rf, RoomOccupancy_Testing)
+confusionMatrix(pred.test, RoomOccupancy_Testing$Occupancy)
+plot(rf)
+
+```
+
+The accuracy of the model is 75.67%, which is relatively high. 
+
+As the number of trees grow, the error rate drops. We are unable of improving error after about 380 trees.
+Now lets tune mtry:
+```{r , echo=TRUE}
+library(MASS)
+train <- RoomOccupancy_Training
+tuned <- tuneRF(train[,-6], train[,6], stepFactor = 0.9, plot = TRUE, ntreeTry = 350, trace = TRUE, improve = 0.05)
+
+```
+
+Between 2 and 3 of mtry, the oob error decreases. So the best mtry would be 2. 
+
+(d) Output and analyse the feature importance obtained by the random forests classifier.
+
+```{r , echo=TRUE}
+importance(rf)
+varImpPlot(rf)
+
+
+```
+Most important features are Light, CO2 and Temperature. 
